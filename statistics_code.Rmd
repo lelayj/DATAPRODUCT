@@ -1,0 +1,272 @@
+---
+title: "statistics_code"
+author:  "Joel Le Lay "
+date: "2016/04/08"
+output: html_document
+---
+
+See STATISTICS / algorithm logic for the way this code is built.
+
+The result `statistics` of the execution of this code has been saved 
+to the file `statistics.rds` due to the time needed for the  execution.
+
+elapsed time:   
+3596.872 + 1175.363 + 620.229 + 426.817 + 386.673 + 58.725 + 14.575 = 6279.254  
+(Intel® Core™ i5-3210M CPU @ 2.50GHz × 4)  
+
+The file `statistics.rds` will be used at the beginning of the pitch chunk STATISTICS   
+and at the beginning of the code generating the 14 plots.  
+It can be found on GitHUb at the link
+https://github.com/lelayj/DATAPRODUCT  
+
+
+```{r,eval=FALSE, message=FALSE}
+library(fpp)
+library(rlist)
+```
+
+**LOADING DATA**  
+
+```{r,eval=FALSE}
+chocolate_confectionery <- readRDS("data/chocolate_confectionery.rds")
+retail_turnover <- readRDS("data/retail_turnover.rds")
+reports_of_a_French_company <- readRDS("data/reports_of_a_French_co.rds")
+```
+
+
+**FORECASTING**  
+Considering two consecutive intervals of a time series s:   
+s1 (used to forecast, window, training set) and s2 (to forecast, horizon, test set)   
+
+```{r, eval=FALSE}
+
+FUN_sp <- function(s,i,p,h){#  i+p+h <= length(s), s time series
+        
+        # i number  of quarters skipped
+        # p, number of quarters used to forecast
+        # h, number of quarters to forecast
+        
+        # getting the time of the first observation (e.g. 1959.25 if 1959Q2)
+        sStart <-  attributes(s)$tsp[1]
+        
+        # start of the period used to forecast
+        r0 <- sStart + 0.25*i
+        # start of the period to forecast :
+        r1 <- r0 + 0.25*p
+        # end of the period to forecast:
+        r2 <- r1 +  0.25*h
+        
+        # window of quarters used to forecast
+        s1 <- window(s, start=r0, end=r1-0.1)
+        # window of quarters to forecast
+        s2 <- window(s, start=r1, end=r2-0.1) 
+        
+        list(s1=s1, s2=s2)
+}  
+
+```
+
+**Forecasts made using 7  methods**  
+
+**Forecasting methods and their accuracy measure value, given a training set  
+and a test set.**  
+**Choosing "MAPE"as measure of the forecast accuracy**  
+
+```{r,eval=FALSE}
+FUNac1 <- function(s,i,p,h){#  i+p+h <= length(s), s time series
+        
+        # i number  of quarters skipped
+        # p, number of quarters used to forecast
+        # h, number of quarters to forecast
+        
+        
+        sp <-  FUN_sp(s,i, p, h)
+        # period used to forecast
+        s1 <- sp[[1]]
+        # period to forecast
+        s2 <- sp[[2]]
+        
+        # forecasts
+        
+        regFit1 <- tslm(s1 ~ trend)
+        regFit2 <- tslm(s1 ~ trend + season) 
+        etsFit <- ets(s1)
+        
+        f1 <- forecast(etsFit, h=h)
+        f2 <- snaive(s1, h)  
+        f3 <- forecast( regFit2, h=h )
+        f4 <- forecast( regFit1, h=h )
+        f5 <- meanf(s1, h)
+        f6 <- naive(s1, h) 
+        f7 <- rwf(s1, h, drift=TRUE)
+        
+        fc <- list("Exponential Smoothing"=f1, "Seasonal naive"=f2, 
+                   "Multiple regression" =f3,"Simple regression"=f4,
+                   Mean=f5, Naive=f6, Drift=f7
+        )
+        # MAPE of each forecasting method  
+        # round( , 2) to avoid further ties
+        sapply( fc, function(f){ round( accuracy(f, s2)[2, "MAPE"] , 2 ) } )
+}
+
+```
+
+```{r,eval=FALSE}
+fNb <- 7 # number of forecasting methods
+```
+
+
+```{r,eval=FALSE}
+FUNac2 <- function(s, p){# p + round(p/4)<=  length(s)
+        
+        # p, number of quarters used to forecast
+        # h = round(p/4), number of quarters to forecast
+        
+        FUN_i <- function(i){ FUNac1(s,i, p, round(p/4))}  
+        
+        # iMax+p+h=length(s), so iMax= length(s)-p-h
+        h <- round(p/4)
+        iMax <-length(s)-p-h
+        # iMax + 1 periods will be forecast
+        # MAPE  of each forecasting method on each test set
+        t(sapply(0:iMax, FUN_i))
+}  
+```
+
+**Considering every possible training set, that is any interval that can
+be extracted from the time series, with a length of between  pMin and pMax:  
+pMin can be freely chosen (but > 4) and pMax is the largest integer
+such that pMax + round(pMax/4) $\leqslant$ length(s).  
+The test set is taken to be the consecutive interval such that 
+test set length =  round(training set length /4).  
+The corresponding MAPEs are calculated.**  
+
+
+```{r,eval=FALSE}
+
+FUNac3 <- function(s,pMin){
+        # pMin: minimum training set length  ( > 4 ) from which to start
+        p0 <- pMin 
+        while(p0 + round(p0/4) <=  length(s)){
+                p0 <- p0+1
+        }
+        # pMax: maximum possible training set length at which to end
+        
+        pMax <- p0-1 
+        
+        list.rbind( lapply(pMin:pMax, function(p){ FUNac2(s, p) } ) )
+        
+}
+
+```
+
+**Getting for each forecasting method the number of times when the method ranked n°1,**
+**its mean MAPE and the standard deviation of its MAPEs**  
+
+```{r, eval=FALSE}
+FUNres <- function(s,pMin){
+        # pMin: minimum training set length  ( > 4 ) from which to start
+        
+        ac <- FUNac3(s,pMin)
+        
+        # ranks  according to the MAPEs
+        FUNranks <- function(i){rank( ac[i, ] , ties.method = "min")}
+        ranks <-  t(sapply(1:nrow(ac), FUNranks ))
+        
+        # Getting the number of times when each forecasting method ranked n°1 
+        FUNrank1 <- function(k){
+                tb <- table(ranks[ , k] )
+                logic <- names(tb)=="1"
+                logicSum <- sum(logic)
+                ifelse(logicSum !=0, tb[logic], 0)
+        }
+        
+        rank1 <-sapply(1:fNb, FUNrank1)
+        # the number of times as a percentage 
+        rank1Pc <- round(100*rank1/ nrow(ranks),1)
+        # the mean MAPE for each forecasting method
+        mapeMn <- round(colMeans(ac),1)
+        # standard deviation of MAPEs for each forecasting method 
+        mapeSd <- round(sapply(as.data.frame(ac), sd),1)
+        data.frame(rank1Pc = rank1Pc, mapeMn = mapeMn, mapeSd = mapeSd)
+}
+```
+
+
+**Applying FUNres to each time series**  
+   
+```{r, eval=FALSE}
+
+system.time(
+res_ausbeer <- FUNres(ausbeer, 20)
+)
+```
+
+user     system      elapsed  
+3598.700       0.832    3596.872 
+
+```{r, eval=FALSE}
+system.time(
+res_chocolate <- FUNres(chocolate_confectionery, 20)
+)
+```
+
+user     system      elapsed  
+1175.825       0.272    1175.363 
+
+
+```{r, eval=FALSE}
+
+system.time(
+res_UKgas <- FUNres(UKgas, 20)
+)
+```
+
+user     system      elapsed  
+620.517       0.094     620.229 
+
+
+```{r, eval=FALSE}
+system.time(
+res_austres <- FUNres(austres, 15)
+)
+```
+  
+user     system      elapsed  
+426.969       0.121     426.817   
+
+```{r, eval=FALSE}
+system.time(
+res_JohnsonJohnson <- FUNres(JohnsonJohnson, 15)
+)
+```
+
+user     system      elapsed  
+386.814       0.100     386.673 
+     
+
+```{r, eval=FALSE}
+system.time(
+res_retail <- FUNres(retail_turnover, 8)
+)
+```
+
+user     system      elapsed  
+58.768       0.000      58.725 
+
+```{r, eval=FALSE}
+# 8, 12, 15, 18 show very different rankings
+system.time(
+res_report <- FUNres(reports_of_a_French_company, 8)
+)
+```
+user     system      elapsed  
+14.591       0.000      14.575   
+
+
+```{r,eval=FALSE}
+statistics <- list(res_ausbeer, res_chocolate, res_UKgas, res_austres, res_JohnsonJohnson,
+            res_retail, res_report)
+saveRDS(statistics,"statistics.rds")
+```
+

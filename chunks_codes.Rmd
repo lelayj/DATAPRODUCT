@@ -1,0 +1,185 @@
+---
+title: "RPres chunks codes"
+author: "Joel Le Lay"
+date: "2016/04/08"
+output: html_document
+---
+**PAGE 3 CHUNK FOR PLOTS**  
+
+```{r PLOTS_CODE, message=FALSE}
+library(fpp) # for  tslm
+
+# Loading data  
+s <- readRDS("data/retail_turnover.rds")
+
+# start of the period  to forecast:
+r1 <- 1989.75
+
+# end of the period to forecast:
+r2 <-  1991.5
+
+# start of the training set:
+r <- 1983
+
+# window of quarters used as training set
+s1 <- window(s, start=r, end=r1-0.1)
+
+# window of quarters to forecast
+s2 <-window(s, start=r1, end=r2-0.1) 
+
+# Number of Quarters to forecast
+h <- 4*(r2- r1 ) 
+
+# window of quarters used as training and test sets
+s1s2 <-window(s,  start=r, end=r2-0.1) 
+
+# Forecasts (and prediction intervals) made using the following 7 methods   
+
+FUN_fc <- function(s1,h){ 
+        
+        regFit1 <- tslm(s1 ~ trend)
+        regFit2 <- tslm(s1 ~ trend + season) 
+        etsFit <- ets(s1)
+        
+        f1 <- forecast(etsFit, h=h)
+        f2 <- snaive(s1, h)  
+        f3 <- forecast( regFit2, h=h )
+        f4 <- forecast( regFit1, h=h )
+        f5 <- meanf(s1, h)
+        f6 <- naive(s1, h) 
+        f7 <- rwf(s1, h, drift=TRUE)
+        
+        
+        list(Exponential_Smoothing=f1, Seasonal_naive=f2, Multiple_regression =f3, 
+             Simple_regression=f4, Mean=f5, Naive=f6, Drift=f7
+        )
+} 
+
+# getting the forecasts relative to the actual s1 and h
+fc <- FUN_fc(s1,h)
+
+# ENTIRE PLOT OR ZOOM                
+                
+FUN_PZ <- function(sr, fc, type){
+        # sr as series (s1s2 or s2), fc as list of 7 forecasts
+        # type as "PLOT" or "ZOOM"
+        cols <- c("purple","orange",  "red", "green", 
+                  "blue", "gray50", "goldenrod3", "indianred4")
+                        
+        plot(sr, main=ifelse(type=="PLOT", "Training set, test set and forecasts",
+                             "Zoom on test set and forecasts"), 
+             xlab="Quarters", ylab="", lwd=2, col=cols[1])
+        
+        for(k in 1:7){
+                
+                lines(fc[[k]]$mean, lwd=2, col=cols[k+1])
+        }
+        
+        legend(ifelse(type=="PLOT","topleft","topright"), lwd=4, col=cols,
+               
+               legend=c("Actual values","Exponential smoothing","Seasonal naive",
+                        "Multiple regression","Simple regression","Mean", "Naive",
+                        "Drift" ))
+}
+
+```
+
+
+```{r PLOT}
+FUN_PZ(s1s2, fc,  "PLOT")
+```
+
+```{r ZOOM}
+FUN_PZ(s2, fc,  "ZOOM")
+```
+
+**PAGE 4 CHUNK FOR ACCURACY**  
+                
+```{r ACCURACY}
+# measure of the forecast accuracy: "MAPE" (MEAN ABSOLUTE PERCENTAGE ERROR)
+FUNmeasure <- function(f){
+        
+        round( accuracy(f, s2)[2, "MAPE"]
+               ,1 )
+}
+
+# MAPE of each forecasting method
+a <- sapply(fc, FUNmeasure)
+
+# rank of each method according to its MAPE
+rk <- rank(a, ties.method = "min")
+
+aRk <-  data.frame( rbind( a, rk ))
+# shortening the columns names so that they are displayed on one line
+colnames(aRk) <- c("Exp_smooth", "Seas_naive" ,"Mult_reg", "Simp_reg", "Mean", 
+                   "Naive", "Drift")
+rownames(aRk)<- c("MAPE", "rank")   
+
+knitr::kable(aRk,padding=0)
+```
+
+**PAGE 4 CHUNK FOR TABLE**  
+
+```{r TABLE}
+df <- round( data.frame(Actual_values=s2,
+                        Exponential_Smoothing=fc[[1]]$mean,
+                        Seasonal_naive=fc[[2]]$mean,
+                        Multiple_regression=fc[[3]]$mean,
+                        Simple_regression=fc[[4]]$mean,
+                        Mean=fc[[5]]$mean,
+                        Naive=fc[[6]]$mean,
+                        Drift=fc[[7]]$mean)
+             )
+
+# placing the variables of df in increasing order of their MAPE (in vector "a")
+
+# (note from HELP in Details for "order":any unresolved ties will be left
+# in their original ordering)
+
+# first, numbering them with their column number in df 
+# (same number as in the vector a, plus 1)
+nb <- 2:8
+ord <- order( a ) 
+nb <- nb[ord]
+# leaving the first column at the first place
+df <- df[, c(1,nb) ] 
+# keeping the best 3 methods only (and the first column)
+df <- df[, 1:4 ] 
+tdf <- t(df)
+
+knitr::kable(tdf,padding=0)                
+```
+
+**PAGE 5 CHUNK FOR STATISTICS**  
+
+To see the code that gave the file statistics.rds, 
+see tab STATISTICS / statistics code of the app
+and STATISTICS / algorithm logic for the way the code is built.  
+(or the files statistics_code.Rmd and algo_logic.txt on GitHUb at the link
+https://github.com/lelayj/DATAPRODUCT)   
+
+The result `statistics` of the execution of this code has been saved 
+to the file `statistics.rds` due to the time needed for the  execution.
+
+elapsed time:   
+3596.872 + 1175.363 + 620.229 + 426.817 + 386.673 + 58.725 + 14.575 = 6279.254  
+(Intel® Core™ i5-3210M CPU @ 2.50GHz × 4)  
+
+regarding retail_turnover:  
+
+user  |   system  |    elapsed 
+------|---------|-----------
+58.768  |     0.000   |   58.725
+
+ 
+
+```{r STATISTICS}
+statistics <- readRDS("data/statistics.rds")
+st6 <- statistics[[6]]
+t6 <- t(st6)
+colnames(t6) <- c("Exp_Smooth", "Seas_naive" ,"Mult_reg", "Simp_reg", "Mean",
+                  "Naive", "Drift")
+rownames(t6)<- c("rank1_percent", "MAPE_mean", "MAPE_sd")   
+knitr::kable(t6, padding=0)                     
+```
+

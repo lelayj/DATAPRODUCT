@@ -1,0 +1,163 @@
+
+-HEADER-
+
+The app first shows 6 tabs in the page header:
+
+PLAY, DOCUMENTATION, STATISTICS (with a menu: PLOTS, plots code, 
+statistics code and algorithm logic), SERVER_CODE, UI_CODE and PITCH.
+
+PLAY is the active tab and shows a pane made of a  sidebar panel and a main panel.
+
+-SIDEBAR PANEL-
+
+SELECT BOX AND SINGLE CHECKBOX:
+
+The sidebar panel shows first a select box allowing 7 choices of quaterly time series
+with lengths 211, 149, 108, 89, 84, 39 and 24, respectively,
+whose links are provided above.
+The first of which is already selected.
+
+Directly below is a single checkbox to make the time series seasonally adjusted if desired.
+
+NOTE:
+- selecting a time series, 
+- making a change in the single check box (seasonally adjusted or not)
+HAVE NO EFFECT IN THE MAIN PANEL UNTIL the GO BUTTON HAS BEEN CLICKED ON.
+
+
+But selecting a new time series immediately affects the 3 sliders mentioned below 
+and a change in the single check box (seasonally adjusted or not) affects a
+slider if it has already manually been moved.
+
+3 SLIDERS:
+
+Then 3 sliders allow to determine a test set (period to forecast) and a training set
+(observations used to forecast). 
+The first slider selects the start of the test set, the second one its end,
+and the third one the start of the training set.
+The end of the training set is already known since in forecasting the training set
+and the test set are consecutive.
+
+The number of quarters selected for the test set is displayed, 
+and for the training set as well.
+
+Note that modifying the position of the first slider affects the range of 
+the other two.
+These are sent to their respective initial extreme position (start or end of 
+the time series), and it can be noted that the number displayed at their other
+extreme position has changed as well, showing the new limit of the range.
+
+The 3 sliders positions affect the content of the tabs PLOT, ZOOM, ACCURACY, 
+TABLE and RESIDUALS, but not that of the tab TS SELECTED which always shows 
+the features relative to the entire time series.
+(see further below TS SELECTED).
+
+Values newly selected through the sliders 
+HAVE NO EFFECT IN THE MAIN PANEL UNTIL the GO BUTTON HAS BEEN CLICKED ON,
+
+
+GO BUTTON
+
+Used to validate
+- the choice made in the SELECT BOX (time series) 
+- the choice made in the SINGLE CHECKBOX (seasonally adjusted or not)
+- the positions of the sliders.
+
+SECOND SELECT BOX
+
+A second select box allows to select one of 3 measures of accuracy: MAPE, RMSE and MASE.
+These give the accuracy of the forecasts (it is possible since the actual values are known).
+
+Selecting a new measure immediately affects the tabs ACCURACY, TABLE and RESIDUALS. 
+TABLE is affected since it uses the ranking obtained in ACCURACY and because 
+this ranking may change according to the measure selected!
+RESIDUALS is also affected since this one deals with the forecasting method
+that ranks first, so subject to change.
+
+
+-TABS IN THE MAIN PANEL-
+
+6 tabs are in the main panel: TS SELECTED, PLOT, ZOOM, ACCURACY, TABLE and RESIDUALS.
+
+Reminder:
+- selecting a time series, 
+- making a change in the single check box (seasonally adjusted or not)
+- modifying the positions of the sliders
+HAVE NO EFFECT IN THE MAIN PANEL UNTIL the GO BUTTON HAS BEEN CLICKED ON.
+
+
+TS SELECTED 
+displays some features of the selected time series: length, start and end,
+a summary, two kinds of seasonal plots and the autocorrelation function.
+
+
+PLOT
+displays in a plot the observations of the training set and of the test set
+selected through the sidebar panel, along with the forecasts made by 
+the 7 forecasting methods.
+
+ZOOM
+Same as PLOT but only shows the test set and the forecasts so as to get a more 
+readable plot.
+It may happen that some lines are not displayed, because too far away at this scale.
+
+ACCURACY
+for the measure selected,
+- displays the value of the accuracy obtained by each forecasting method
+(for the forecasts relative to the training and test sets selected).
+
+- displays the resulting ranking as well.
+
+
+TABLE
+displays the actual values of the test set along with the forecasts 
+of the top 3 ranked models, starting from the best one.
+
+
+RESIDUALS
+displays for the forecasting method that ranked first, two plots:
+a histogram of the residuals and their autocorrelation function, allowing to see
+through spikes whether the forecasts are good or not.  
+
+
+going back to
+-HEADER-
+
+DOCUMENTATION (here)
+
+STATISTICS
+Nothing beats experiencing different positions of the sliders and different 
+time series, but statistics are nice too! So, given a time series, we considered
+many training sets and test sets and were interested for each forecasting method
+in the percentage of times when it ranked n°1 and in the mean and standard deviation
+of its MAPE.  
+
+STATISTICS / PLOTS
+(Allow a few seconds to have them displayed).
+This tab displays the plots showing the statistics mentioned above, presented 
+in the form of 14 bar plots.
+14 plots = 2 plots per time series x 7 time series. 
+The first of the two shows for each forecasting method 
+the percentage of tests for which the forecasting method ranked n°1, 
+and the second one shows its mean MAPE along with its standard deviation. 
+
+STATISTICS / plots code
+shows the code generating the 14 plots mentioned above, 
+saved to the file plots14_code.Rmd.
+
+STATISTICS / statistics code
+shows the code saved to the file "statistics_code.Rmd".
+Given a time series,this code calculates for each forecasting method 
+the percentage of tests for which the method ranked n°1, 
+and the mean and standard deviation of its MAPE as well.
+
+STATISTICS / algorithm logic
+gives the way the tests carried out in "statistics_code.Rmd" are built.
+
+
+SERVER_CODE and  UI_CODE 
+show the codes server.R and ui.R respectively.
+
+PITCH 
+- provides the link to the pitch
+- shows the codes of the pitch chunks.

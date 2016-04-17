@@ -1,0 +1,36 @@
+This can be found in the file algo_logic.txt on GitHUb at the link
+https://github.com/lelayj/DATAPRODUCT  as well.    
+
+
+This is the algorithm logic relative to the code shown under the tab  
+STATISTICS/statistics code, 
+which can be found on GitHUb at the link
+https://github.com/lelayj/DATAPRODUCT as well.    
+
+Here is the way the code is built:  
+
+Tests were carried out on each of the 7 time series proposed in the first select box
+of the tab PLAY.
+
+note:
+period used to forecast = training set
+period to forecast = test set
+
+For each time series:
+
+We consider any possible pair (training set, test set) of two consecutive intervals
+that can be extracted from the time series with a minimum length of pMin for the 
+training set and a test set length equal to about one quarter the training set length. 
+
+The values taken for pMin are: 20 for ausbeer, chocolate confectionery and UKgas,
+15 for austres and JohnsonJohnson, and 8 for retail turnover and reports of a French
+company, depending on their length: 211, 149, 108, 89, 84, 39 and 24, respectively.
+
+Given a pair, the MAPE (MEAN ABSOLUTE PERCENTAGE ERROR) of each forecasting method is
+calculated, allowing to rank the methods according to their MAPE, starting from
+the best one. So, a ranking relative to this pair is obtained. 
+
+Now, given a time series, we focus for each forecasting method on the number 
+of times when the method ranks n°1 and retain this number as a percentage
+of the number of rankings, and focus on the mean and standard deviation 
+of its MAPE as well
