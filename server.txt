@@ -1,3 +1,6 @@
+This code lies in the file server.R on GitHUb at the link
+https://github.com/lelayj/DATAPRODUCT  as well.    
+
 
 library(shiny)
 library(fpp)
@@ -301,8 +304,10 @@ shinyServer(function(input, output) {
                 fc <-reactive({
                         FUN_fc(s1(),h())
                 })
-                
+               
+
                 # FORECASTS
+                
                 # PLOT, ZOOM
                 
                 FUN_PZ <- function(sr, fc, type){

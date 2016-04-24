@@ -47,7 +47,7 @@ These are sent to their respective initial extreme position (start or end of
 the time series), and it can be noted that the number displayed at their other
 extreme position has changed as well, showing the new limit of the range.
 
-The 3 sliders positions affect the content of the tabs PLOT, ZOOM, ACCURACY, 
+The 3 sliders positions affect the content of the tabs FORECASTS, ZOOM, ACCURACY, 
 TABLE and RESIDUALS, but not that of the tab TS SELECTED which always shows 
 the features relative to the entire time series.
 (see further below TS SELECTED).
@@ -77,7 +77,7 @@ that ranks first, so subject to change.
 
 -TABS IN THE MAIN PANEL-
 
-6 tabs are in the main panel: TS SELECTED, PLOT, ZOOM, ACCURACY, TABLE and RESIDUALS.
+6 tabs are in the main panel: TS SELECTED, FORECASTS, ZOOM, ACCURACY, TABLE and RESIDUALS.
 
 Reminder:
 - selecting a time series, 
@@ -91,13 +91,13 @@ displays some features of the selected time series: length, start and end,
 a summary, two kinds of seasonal plots and the autocorrelation function.
 
 
-PLOT
+FORECASTS
 displays in a plot the observations of the training set and of the test set
 selected through the sidebar panel, along with the forecasts made by 
 the 7 forecasting methods.
 
 ZOOM
-Same as PLOT but only shows the test set and the forecasts so as to get a more 
+Same as FORECASTS but only shows the test set and the forecasts so as to get a more 
 readable plot.
 It may happen that some lines are not displayed, because too far away at this scale.
 
